@@ -1,6 +1,8 @@
 # Zaml
 A simple file format similar to Yaml
 
+---
+
 A simple Zaml config file looks something like this
 
 ```
@@ -26,4 +28,3 @@ settings: ~
 	fullscreen: false
 	mute: false
   ```
-  
