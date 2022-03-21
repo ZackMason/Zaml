@@ -3,7 +3,7 @@ A simple file format similar to Yaml
 
 ---
 
-A simple Zaml config file looks something like this
+A basic Zaml config file looks something like this
 
 ```
 ---
