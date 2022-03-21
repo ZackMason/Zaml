@@ -1,0 +1,61 @@
+version(1);
+project_name = "Zaml";
+
+patterns = {
+"*.c",
+"*.cpp",
+"*.h",
+"*.png",
+"*.wav",
+"*.ttf",
+"*.bat",
+"*.4coder",
+"*.txt",
+};
+
+blacklist_patterns = {
+".*",
+};
+load_paths_custom = {
+	{
+		{ {"."}, .recursive = true, .relative = true },
+		.os = "win"
+	},
+};
+load_paths = {
+ { load_paths_custom, .os = "win"  },
+ { load_paths_custom, .os = "linux"},
+ { load_paths_custom, .os = "mac"  },
+};
+
+build_web = "4cBuildWeb.bat";
+build_win_r = "4cBuildWin.bat";
+build_win_d = "4cBuildWin.bat Debug";
+
+command_list = {
+	{ 
+		.name = "build web",
+		.out = "*compilation* - *web*", 
+		.footer_panel = true, 
+		.save_dirty_files = true,
+		.cmd = { {build_web, .os = "win" }, },
+	},
+	{ 
+		.name = "build win release",
+		.out = "*compilation* - *release*", 
+		.footer_panel = true, 
+		.save_dirty_files = true,
+		.cmd = { {build_win_r, .os = "win" }, },
+	},
+	{ 
+		.name = "build win debug",
+		.out = "*compilation* - *debug*", 
+		.footer_panel = true, 
+		.save_dirty_files = true,
+		.cmd = { {build_win_d, .os = "win" }, },
+	}
+};
+
+fkey_command[3] = "build web";
+fkey_command[4] = "build win release";
+fkey_command[5] = "build win debug";
