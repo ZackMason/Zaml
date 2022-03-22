@@ -17,5 +17,5 @@ add_executable(${APP_EXE} ${src_files})
 
 target_link_libraries(${APP_EXE} ${CONAN_LIBS})
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/game/res/")
+target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
 

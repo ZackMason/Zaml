@@ -12,6 +12,6 @@ cmake --build .. --config %buildType%
 
 popd
 
-if %ERRORLEVEL% EQU 0 bin\Zaml.exe
+if %ERRORLEVEL% EQU 0 %buildType%\Zaml.exe
 
 popd

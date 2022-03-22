@@ -1,0 +1,22 @@
+---
+version: 0.1.1
+window: ~
+	width: 640
+	height: 480
+	title: Zaml is great
+	batching: 0
+	font: ~
+		file: Fonts/NotoMono-Regular.ttf
+		size: 12
+
+credits: ~
+	-: ~
+		name: Zackery Mason-Blaug
+		role: Programmer
+	-: ~
+		name: Zackery Mason-Blaug
+		role: Artist
+
+settings: ~
+	fullscreen: false
+	mute: false

@@ -196,7 +196,7 @@ namespace Zaml
 		std::string str = ss.str();
         
 #if __EMSCRIPTEN__
-		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
+		static const std::regex r(R"rgx(\n(\s*)(\w+|-)\s*:\s*(.*))rgx");
 #else
 		static const std::regex r(R"rgx(^(\s*)(\w+|-)\s*:\s*(.*))rgx");
 #endif
@@ -239,6 +239,9 @@ namespace Zaml
 			Node& curr_node = root.get_path(indent_keys.begin()+1, indent_keys.end());
             
 			auto key = m[2].str();
+            key.erase(std::remove(key.begin(),key.end(), '\n'), key.end());
+            
+            
 			if (key == "-")
 			{
 				key = std::to_string(curr_node.children.size());
