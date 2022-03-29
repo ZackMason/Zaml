@@ -22,9 +22,11 @@ settings: ~
 	mute: false
 
 
-test: false
-	-: true
+test: true
+	-: false
 		title: Ninja Test
 		file: ninjato.zaml
-
+	-: true
+		title: Tiled Level Test
+		file: level0.zaml
 
