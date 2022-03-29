@@ -20,3 +20,11 @@ credits: ~
 settings: ~
 	fullscreen: false
 	mute: false
+
+
+test: false
+	-: true
+		title: Ninja Test
+		file: ninjato.zaml
+
+

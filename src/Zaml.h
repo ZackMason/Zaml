@@ -150,9 +150,13 @@ namespace Zaml
 		{
 			for (int i = 0; i < indent_level; i++)
 			{
-				ss << " ";
+#if __EMSCRIPTEN__
+                ss << "_";
+#else
+                ss << " ";
+#endif
 			}
-			ss << name << ": " << child.value << "\n";
+			ss << name << ": " << child.value << '\n';
 			
 			if (child.size() > 0)
 			{
@@ -176,6 +180,18 @@ namespace Zaml
 #endif
 	}
     
+    auto& xplat_getline(std::istream& stream, std::string& string)
+    {
+#if __EMSCRIPTEN__
+        auto& ret = std::getline(stream, string);
+        
+        if(!string.empty())
+            string.pop_back();
+        return ret;
+#endif
+        return std::getline(stream, string);
+    }
+    
 	Node LoadFile(const std::string& filename)
 	{
 #if _DEBUG || __EMSCRIPTEN__
@@ -192,13 +208,14 @@ namespace Zaml
         
 		std::stringstream ss;
 		ss << file.rdbuf();
-		
 		std::string str = ss.str();
         
+        
+        
 #if __EMSCRIPTEN__
-		static const std::regex r(R"rgx(\n(\s*)(\w+|-)\s*:\s*(.*))rgx");
+		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
 #else
-		static const std::regex r(R"rgx(^(\s*)(\w+|-)\s*:\s*(.*))rgx");
+		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
 #endif
 		std::smatch m;
         
@@ -210,16 +227,18 @@ namespace Zaml
 		std::string last_key = root.key;
 		
 		std::vector<int> last_indent; 
-		last_indent.push_back(indent_level);
         
 		//std::cout << "Zaml::Executing regex on: " << str << std::endl;
         
-		while (std::regex_search(str, m, r))
+        while(xplat_getline(ss, str))
+            if (std::regex_match(str, m, r))
 		{
 			std::string spaces = m[1].str();
 			spaces.erase(std::remove(spaces.begin(), spaces.end(), '\n'), spaces.end());
             
 			indent_level = spaces.size();
+            if(last_indent.empty())
+                last_indent.push_back(indent_level);
             
 			if (indent_level < last_indent.back())
 			{
@@ -228,7 +247,7 @@ namespace Zaml
 					last_indent.pop_back();
 					indent_keys.pop_back();
 					
-				} while (indent_level < last_indent.back());
+				} while (last_indent.size() > 1 && indent_level < last_indent.back());
 			}
 			else if (indent_level > last_indent.back())
 			{
