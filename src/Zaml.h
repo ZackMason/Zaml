@@ -12,15 +12,6 @@
 
 namespace Zaml
 {
-    
-    template<typename T>
-        using Ref = std::shared_ptr<T>;
-    template<typename T, typename ... Args>
-        constexpr Ref<T> CreateRef(Args&& ... args)
-    {
-        return std::make_shared<T>(std::forward<Args>(args)...);
-    }
-    
     struct Node;
 	std::stringstream ParseNode(Node& root, int indent_level = 0);
 	void SaveFile(Node& root, const std::string& filename);
@@ -211,7 +202,6 @@ namespace Zaml
 		std::string str = ss.str();
         
         
-        
 #if __EMSCRIPTEN__
 		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
 #else
@@ -246,7 +236,6 @@ namespace Zaml
 				{
 					last_indent.pop_back();
 					indent_keys.pop_back();
-					
 				} while (last_indent.size() > 1 && indent_level < last_indent.back());
 			}
 			else if (indent_level > last_indent.back())

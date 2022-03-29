@@ -4,6 +4,8 @@
 #include "json.hpp"
 using nlohmann::json;
 
+#include "ScopeProfiler.h"
+
 #if __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -53,9 +55,13 @@ int main()
                     display_text(config["test"][i]["title"].as<std::string>());
                 }
                 
-                auto test = Zaml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
-                
-                display_lines( Zaml::ParseNode(test).str());
+                {
+                    ScopeProfiler timer(config["test"][i]["title"].as<std::string>());
+                    auto test = Zaml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
+                    
+                    display_text(timer.end());
+                    display_lines( Zaml::ParseNode(test).str());
+                }
             }
         }
     }

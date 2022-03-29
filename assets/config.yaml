@@ -23,7 +23,7 @@ settings: ~
 
 
 test: true
-	-: false
+	-: true
 		title: Ninja Test
 		file: ninjato.zaml
 	-: true
