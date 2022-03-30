@@ -1,1 +1,1 @@
-em++ -g -fdebug-compilation-dir='..\src' -std=c++20 ..\src\main.cpp -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -o game.html --use-preload-plugins --preload-file ./assets -DASSETS_PATH=\"./assets/\"
+em++ --bind -O3 -std=c++20 ..\src\main.cpp -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1 -o game.html --use-preload-plugins --preload-file ./assets -DASSETS_PATH=\"./assets/\"
