@@ -24,10 +24,13 @@ credits: ~
 	-: ~
 		name: Pablo Picasso
 		role: Artist
-
+		
+# Any of these work as bools
 settings: ~
 	fullscreen: false
-	mute: false
+	mute: True
+	vsync: off
+	uncappedFPS: On
 	
 tests: true
 	-: on
