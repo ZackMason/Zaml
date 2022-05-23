@@ -7,6 +7,7 @@ A basic Zaml config file looks something like this
 
 ```
 ---
+# Comments must start with a '#'
 version: 0.1.1
 window: ~
 	width: 640
