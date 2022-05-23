@@ -27,4 +27,12 @@ credits: ~
 settings: ~
 	fullscreen: false
 	mute: false
+	
+tests: true
+	-: on
+		title: test1
+		file: test1.zaml
+	-: off
+		title: bench_test
+		file: bench_test.zaml
   ```
