@@ -221,47 +221,51 @@ namespace Zaml
 		//std::cout << "Zaml::Executing regex on: " << str << std::endl;
         
         while(xplat_getline(ss, str))
-            if (std::regex_match(str, m, r))
-		{
-			std::string spaces = m[1].str();
-			spaces.erase(std::remove(spaces.begin(), spaces.end(), '\n'), spaces.end());
-            
-			indent_level = spaces.size();
-            if(last_indent.empty())
-                last_indent.push_back(indent_level);
-            
-			if (indent_level < last_indent.back())
+        {
+			if (str[0] == '#') continue;
+		    if (std::regex_match(str, m, r))
 			{
-				do
+				std::string spaces = m[1].str();
+				spaces.erase(std::remove(spaces.begin(), spaces.end(), '\n'), spaces.end());
+				
+				indent_level = spaces.size();
+				if(last_indent.empty())
+					last_indent.push_back(indent_level);
+				
+				if (indent_level < last_indent.back())
 				{
-					last_indent.pop_back();
-					indent_keys.pop_back();
-				} while (last_indent.size() > 1 && indent_level < last_indent.back());
+					do
+					{
+						last_indent.pop_back();
+						indent_keys.pop_back();
+						
+					} while (last_indent.size() > 1 && indent_level < last_indent.back());
+				}
+				else if (indent_level > last_indent.back())
+				{
+					last_indent.push_back(indent_level);
+					indent_keys.push_back(last_key);
+				}
+				
+				Node& curr_node = root.get_path(indent_keys.begin()+1, indent_keys.end());
+				
+				auto key = m[2].str();
+				key.erase(std::remove(key.begin(),key.end(), '\n'), key.end());
+				
+				
+				if (key == "-")
+				{
+					key = std::to_string(curr_node.children.size());
+				}
+				
+				
+				curr_node[key].key = key;
+				curr_node[key].value = m[3].str();
+				
+				last_key = std::string(key);
+				
+				str = m.suffix().str();
 			}
-			else if (indent_level > last_indent.back())
-			{
-				last_indent.push_back(indent_level);
-				indent_keys.push_back(last_key);
-			}
-            
-			Node& curr_node = root.get_path(indent_keys.begin()+1, indent_keys.end());
-            
-			auto key = m[2].str();
-            key.erase(std::remove(key.begin(),key.end(), '\n'), key.end());
-            
-            
-			if (key == "-")
-			{
-				key = std::to_string(curr_node.children.size());
-			}
-            
-            
-            curr_node[key].key = key;
-			curr_node[key].value = m[3].str();
-            
-			last_key = std::string(key);
-            
-			str = m.suffix().str();
 		}
 #if _DEBUG || __EMSCRIPTEN__
 		std::cout << "Zaml::Done parsing: " << ParseNode(root).str() << std::endl;

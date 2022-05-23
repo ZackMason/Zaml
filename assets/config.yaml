@@ -21,7 +21,7 @@ settings: ~
 	fullscreen: false
 	mute: false
 
-
+# This is a test comment
 test: true
 	-: true
 		title: Ninja Test
