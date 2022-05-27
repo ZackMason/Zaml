@@ -1,4 +1,4 @@
-# nyml
+# nyml - nyml not yaml
 A simple file format similar to Yaml
 
 ---
