@@ -9,6 +9,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <type_traits>
+#include <variant>
+#include <cassert>
 
 namespace Zaml
 {
@@ -17,24 +20,84 @@ namespace Zaml
 	void SaveFile(Node& root, const std::string& filename);
 	Node LoadFile(const std::string& filename);
 	
+	enum class ValueType {
+		NONE_TYPE,
+		BOOL_TYPE,
+		INT_TYPE,
+		FLOAT_TYPE,
+		STR_TYPE,
+		SIZE,
+		//ARRAY_TYPE,
+	};
+
     struct Node {
 		std::string key;
+		
+		union Value
+		{
+			std::string_view string;
+			bool boolean;
+			int number_integer;
+			//uint32_t number_unsigned;
+			float number_float;
+
+			Value() = default;
+			Value(bool v) noexcept : boolean(v) {}
+			Value(int v) noexcept : number_integer(v) {}
+			//json_value(number_unsigned_t v) noexcept : number_unsigned(v) {}
+			Value(float v) noexcept : number_float(v) {}
+			Value(ValueType t)
+			{
+				switch (t)
+				{
+					case ValueType::STR_TYPE:
+					{
+						string = "";
+						break;
+					}
+					case ValueType::BOOL_TYPE:
+					{
+						boolean = false;
+						break;
+					}
+					case ValueType::INT_TYPE:
+					{
+						number_integer = 0;
+						break;
+					}
+
+					case ValueType::FLOAT_TYPE:
+					{
+						number_float = 0.0f;
+						break;
+					}
+				}
+			}
+		};
+		ValueType _type;
+		Value _value;
+
+		//std::variant<bool, int, float, std::string> _value;
+
 		std::string value;
         
 		std::unordered_map<std::string, Node> children;
         
         Node(const Node& other) 
-            : key(other.key), value(other.value),
-        children(other.children)
+            : key(other.key), 
+			value(other.value), 
+			children(other.children), 
+			_value(other._value), _type(other._type)
         {
             
         }
         
 		Node() : Node("root")
 		{
-            
 		}
-		Node(const std::string& p_key, const std::string& p_value = "~") : key(p_key), value(p_value)
+
+		Node(const std::string& p_key, const std::string& p_value = "~") 
+			: key(p_key), value(p_value), _value(0)
 		{
             
 		}
@@ -92,45 +155,100 @@ namespace Zaml
 		}
         
 		template <typename T>
-            T as() const
+            T& as() 
 		{
-			return T(value);
+			// TODO
+			// idk what to do in this case yet
+			static T dummy;
+			return dummy;
 		}
         
 		template <>
-            int as<int>() const
+            int& as<int>() 
 		{
-			return std::atoi(value.c_str());
+			static int dummy;
+			if(_type == ValueType::INT_TYPE)
+				return _value.number_integer;
+			else
+				return dummy;
 		}
         
 		template <>
-            std::string as<std::string>() const
+            std::string_view& as<std::string_view>()
 		{
-			return value;
+			static std::string_view dummy{"~"};
+			if(_type == ValueType::STR_TYPE)
+				return _value.string;
+			else
+				return dummy;
+		}
+
+		template <>
+            std::string& as<std::string>()
+		{
+			static std::string dummy{"~"};
+			if(_type == ValueType::STR_TYPE)
+				return value;
+			else
+				return dummy;
 		}
         
 		template <>
-            bool as<bool>() const
+            bool& as<bool>() 
 		{
-			if (value == "true") return true;
-			if (value == "false") return false;
-			if (value == "True") return true;
-			if (value == "False") return false;
-			if (value == "on") return true;
-			if (value == "off") return false;
-			if (value == "On") return true;
-			if (value == "Off") return false;
-			return false;
+			static bool dummy;
+			if(_type == ValueType::BOOL_TYPE)
+				return _value.boolean;
+			else
+				return dummy;
 		}
         
 		template <>
-            float as<float>() const
+            float& as<float>() 
 		{
-			return std::atof(value.c_str());
+			static float dummy;
+			if(_type == ValueType::FLOAT_TYPE)
+				return _value.number_float;
+			else
+				return dummy;
 		}
 	};
     
 #ifdef ZAML_IMPLEMENTATION
+	bool is_number(const std::string& s)
+	{
+		return !s.empty() && std::find_if(s.begin(), 
+			s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+	}
+	bool is_float(const std::string& str ) {
+		std::istringstream iss(str);
+		float f;
+		iss >> std::noskipws >> f; 
+		return iss.eof() && !iss.fail(); 
+	}
+	bool is_bool(const std::string& value){
+		if (value == "true") return true;
+		if (value == "false") return true;
+		if (value == "True") return true;
+		if (value == "False") return true;
+		if (value == "on") return true;
+		if (value == "off") return true;
+		if (value == "On") return true;
+		if (value == "Off") return true;
+		return false;
+	}
+	bool as_bool(const std::string& value){
+		if (value == "true") return true;
+		if (value == "false") return false;
+		if (value == "True") return true;
+		if (value == "False") return false;
+		if (value == "on") return true;
+		if (value == "off") return false;
+		if (value == "On") return true;
+		if (value == "Off") return false;
+		return false;
+	}
+
 	std::stringstream ParseNode(Node& root, int indent_level)
 	{
 		std::stringstream ss;
@@ -147,7 +265,25 @@ namespace Zaml
                 ss << " ";
 #endif
 			}
-			ss << name << ": " << child.value << '\n';
+			switch (child._type)
+			{
+				case ValueType::STR_TYPE:
+					ss << name << ": " << child.value << '\n';
+					break;
+				case ValueType::BOOL_TYPE:
+					ss << name << ": " << child._value.boolean << '\n';
+					break;
+				case ValueType::INT_TYPE:
+					ss << name << ": " << child._value.number_integer << '\n';
+					break;
+				case ValueType::FLOAT_TYPE:
+					ss << name << ": " << child._value.number_float << '\n';
+					break;
+				default:
+					ss << name << ": ~\n";
+					break;
+			}
+			//ss << name << ": " << child._value << '\n';
 			
 			if (child.size() > 0)
 			{
@@ -260,7 +396,35 @@ namespace Zaml
 				
 				
 				curr_node[key].key = key;
-				curr_node[key].value = m[3].str();
+
+				auto read_value = m[3].str();
+				if (is_float(read_value))
+				{
+					curr_node[key]._value.number_float = std::stof(read_value);
+					curr_node[key]._type = ValueType::FLOAT_TYPE;
+				}
+				else if (is_number(read_value))
+				{
+					curr_node[key]._value.number_integer = std::stoi(read_value);
+					curr_node[key]._type = ValueType::INT_TYPE;
+				}
+				else if (is_bool(read_value))
+				{
+					curr_node[key]._value.boolean = as_bool(read_value);
+					curr_node[key]._type = ValueType::BOOL_TYPE;
+				}
+				else if (key == "~")
+				{
+					curr_node[key]._value.string = "~";
+					curr_node[key]._type = ValueType::NONE_TYPE;
+				}
+				else 
+				{
+					curr_node[key].value = read_value;
+					curr_node[key]._value.string = std::string_view{curr_node[key].value};
+					curr_node[key]._type = ValueType::STR_TYPE;
+				}
+				//curr_node[key].value = m[3].str();
 				
 				last_key = std::string(key);
 				
