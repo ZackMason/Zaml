@@ -41,8 +41,16 @@ int main()
     Zaml::Node config = Zaml::LoadFile(ASSETS_PATH + std::string("config.yaml"));
     
     display_text(config["window"]["title"].as<std::string>());
-    display_lines(Zaml::ParseNode(config).str());
+    display_lines(Zaml::Dump(config).str());
     
+    display_text("\n\n");
+
+    std::string test_data = 
+        "test: ~\n"
+        "  hello: world!\n";
+
+    Zaml::Node test_node = Zaml::Parse(test_data);
+    display_lines(Zaml::Dump(test_node).str());
     
     if (config["test"].as<bool>())
     {
@@ -60,7 +68,9 @@ int main()
                     auto test = Zaml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
                     
                     display_text(timer.end());
-                    display_lines( Zaml::ParseNode(test).str());
+                    display_text("---");
+                    display_lines(Zaml::Dump(test).str());
+                    display_text("\n\n");
                 }
             }
         }

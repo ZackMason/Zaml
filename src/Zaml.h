@@ -15,9 +15,10 @@
 namespace Zaml
 {
     struct Node;
-	std::stringstream ParseNode(Node& root, int indent_level = 0);
+	std::stringstream Dump(Node& root, int indent_level = 0);
 	void SaveFile(Node& root, const std::string& filename);
 	Node LoadFile(const std::string& filename);
+	Node Parse(const std::string& str);
 	
 	enum class ValueType {
 		NONE_TYPE,
@@ -259,11 +260,11 @@ namespace Zaml
 		return false;
 	}
 
-	std::stringstream ParseNode(Node& root, int indent_level)
+	std::stringstream Dump(Node& root, int indent_level)
 	{
 		std::stringstream ss;
-		if (indent_level == 0)
-			ss << "---\n";
+		//if (indent_level == 0)
+		//	ss << "---\n";
         
 		for (auto& [name, child] : root)
 		{
@@ -297,7 +298,7 @@ namespace Zaml
 			
 			if (child.size() > 0)
 			{
-				ss << ParseNode(child, indent_level + 4).str();
+				ss << Dump(child, indent_level + 4).str();
 			}
 		}
         
@@ -306,7 +307,7 @@ namespace Zaml
     
 	void SaveFile(Node& root, const std::string& filename)
 	{
-		auto ss = ParseNode(root);
+		auto ss = Dump(root);
         
 		std::ofstream file(filename);
         
@@ -335,19 +336,24 @@ namespace Zaml
 		std::cout << "Zaml::Opening file: " << filename << std::endl;
 #endif
 		std::ifstream file(filename);
-		Node root = Node("root");
         
 		if (!file.is_open())
 		{
 			std::cerr << "Zaml::Failed to open file: " << filename << std::endl;
-			return root;
+			return Node{"root"};
 		}
         
 		std::stringstream ss;
 		ss << file.rdbuf();
 		std::string str = ss.str();
-        
-        
+		return Parse(str);
+	}
+	Node Parse(const std::string& data)
+	{
+		Node root = Node("root");
+		std::stringstream ss(data);
+		std::string str = ss.str();
+
 #if __EMSCRIPTEN__
 		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
 #else
@@ -442,7 +448,7 @@ namespace Zaml
 			}
 		}
 #if _DEBUG || __EMSCRIPTEN__
-		std::cout << "Zaml::Done parsing: " << ParseNode(root).str() << std::endl;
+		std::cout << "Zaml::Done parsing: " << Dump(root).str() << std::endl;
 #endif
         
 		return root;
