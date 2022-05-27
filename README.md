@@ -40,3 +40,41 @@ tests: true
 		title: bench_test
 		file: bench_test.zaml
   ```
+
+## Code Example
+
+```c++
+#define ZAML_IMPLEMENTATION
+#define ZAML_EXCEPTIONS
+#include "Zaml.h"
+
+int main()
+{
+	// load from a file
+	Zaml::Node config = Zaml::LoadFile(ASSETS_PATH + std::string("config.zaml"));
+
+	std::cout << Zaml::Dump(config).str() << std::endl;
+
+	// load from string
+	std::string test_data = 
+		"test: ~\n"
+		"  hello: world!\n";
+
+	Zaml::Node test_node = Zaml::Parse(test_data);
+	test_node["test"]["bool"] = true;
+	test_node["test"]["bool"] = false;
+
+	try {
+		test_node["test"]["bool"].as<std::string>(); // throws exception with ZAML_EXCEPTIONS
+	} 
+	catch(Zaml::ZamlInvalidAccessException & e)
+	{
+		std::cerr << e.pretty_print() << std::endl;
+	}
+	test_node["test"]["bool"].as<bool>(); // valid
+	
+
+	return 0;
+}
+```
+
