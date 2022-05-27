@@ -23,10 +23,10 @@ settings: ~
 
 # This is a test comment
 test: true
-	-: true
+	-: false
 		title: Ninja Test
 		file: ninjato.zaml
-	-: true
+	-: false
 		title: Tiled Level Test
 		file: level0.zaml
 

@@ -1,4 +1,5 @@
 #define ZAML_IMPLEMENTATION
+#define ZAML_EXCEPTIONS
 #include "Zaml.h"
 
 #include "json.hpp"
@@ -38,11 +39,35 @@ void display_lines(const std::string& text)
 
 int main()
 {
+    using namespace std::string_literals;
     Zaml::Node config = Zaml::LoadFile(ASSETS_PATH + std::string("config.yaml"));
     
     display_text(config["window"]["title"].as<std::string>());
-    display_lines(Zaml::ParseNode(config).str());
+    display_lines(Zaml::Dump(config).str());
     
+    display_text("\n\n");
+
+    std::string test_data = 
+        "test: ~\n"
+        "  hello: world!\n";
+
+    Zaml::Node test_node = Zaml::Parse(test_data);
+    test_node["test"]["string"]["greeting"] = "How are you?"s;
+    test_node["test"]["string"]["answer"] = "Good"s;
+    test_node["test"]["bool"]["cpp_style_t"] = true;
+    test_node["test"]["bool"]["cpp_style_f"] = false;
+
+    try {
+
+        test_node["test"]["bool"]["cpp_style_f"].as<std::string>();
+    } 
+    catch(Zaml::ZamlInvalidAccessException & e)
+    {
+        std::cerr << e.pretty_print() << std::endl;
+    }
+
+
+    display_lines(Zaml::Dump(test_node).str());
     
     if (config["test"].as<bool>())
     {
@@ -60,7 +85,9 @@ int main()
                     auto test = Zaml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
                     
                     display_text(timer.end());
-                    display_lines( Zaml::ParseNode(test).str());
+                    display_text("---");
+                    display_lines(Zaml::Dump(test).str());
+                    display_text("\n\n");
                 }
             }
         }

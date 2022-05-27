@@ -1,6 +1,7 @@
 #pragma once
 // Zaml.h - A simplefied Yaml parser
 // add #define ZAML_IMPLEMENTATION to a cpp file
+// add #define ZAML_EXCEPTIONS to add exceptions
 
 #include <string>
 #include <vector>
@@ -9,32 +10,133 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <type_traits>
+#include <cassert>
+
+
 
 namespace Zaml
 {
+
+#ifdef ZAML_EXCEPTIONS
+	struct ZamlInvalidAccessException : public std::exception
+	{
+		const char* file;
+		int line;
+		const char* func;
+		const char* info;
+		ZamlInvalidAccessException(
+			const char* msg, 
+			const char* file_, 
+			int line_, 
+			const char* func_, 
+			const char* info_ = "") : std::exception(msg),
+        	file (file_),
+        	line (line_),
+        	func (func_),
+        	info (info_)
+        {
+        }
+
+		std::string pretty_print() const {
+			std::stringstream ss;
+			ss << what() << " - " << get_file() << ":" << get_line() << "::" << get_func() << std::endl;
+			return ss.str();
+		}
+	
+        const char* get_file() const { return file; }
+        int get_line() const { return line; }
+		const char* get_func() const { return func; }
+        const char* get_info() const { return info; }
+	};
+#define ZAML_THROW_INVALID_ACCESS throw ZamlInvalidAccessException("Zaml::Invalid Access", __FILE__, __LINE__, __func__);
+#else
+#define ZAML_THROW_INVALID_ACCESS  
+#endif
+
+
     struct Node;
-	std::stringstream ParseNode(Node& root, int indent_level = 0);
+	std::stringstream Dump(Node& root, int indent_level = 0);
 	void SaveFile(Node& root, const std::string& filename);
 	Node LoadFile(const std::string& filename);
+	Node Parse(const std::string& str);
 	
+	enum class ValueType {
+		NONE_TYPE,
+		BOOL_TYPE,
+		INT_TYPE,
+		FLOAT_TYPE,
+		STR_TYPE,
+		SIZE,
+		//ARRAY_TYPE,
+	};
+
     struct Node {
 		std::string key;
+		
+		union Value
+		{
+			std::string_view string;
+			bool boolean;
+			int number_integer;
+			//uint32_t number_unsigned;
+			float number_float;
+
+			Value() = default;
+			Value(bool v) noexcept : boolean(v) {}
+			Value(int v) noexcept : number_integer(v) {}
+			//json_value(number_unsigned_t v) noexcept : number_unsigned(v) {}
+			Value(float v) noexcept : number_float(v) {}
+			Value(ValueType t)
+			{
+				switch (t)
+				{
+					case ValueType::STR_TYPE:
+					{
+						string = "";
+						break;
+					}
+					case ValueType::BOOL_TYPE:
+					{
+						boolean = false;
+						break;
+					}
+					case ValueType::INT_TYPE:
+					{
+						number_integer = 0;
+						break;
+					}
+
+					case ValueType::FLOAT_TYPE:
+					{
+						number_float = 0.0f;
+						break;
+					}
+				}
+			}
+		};
+		ValueType _type;
+		Value _value;
+
 		std::string value;
         
 		std::unordered_map<std::string, Node> children;
         
         Node(const Node& other) 
-            : key(other.key), value(other.value),
-        children(other.children)
+            : key(other.key), 
+			value(other.value), 
+			children(other.children), 
+			_value(other._value), _type(other._type)
         {
             
         }
         
 		Node() : Node("root")
 		{
-            
 		}
-		Node(const std::string& p_key, const std::string& p_value = "~") : key(p_key), value(p_value)
+
+		Node(const std::string& p_key, const std::string& p_value = "~") 
+			: key(p_key), value(p_value), _value(0)
 		{
             
 		}
@@ -66,15 +168,28 @@ namespace Zaml
 			return children.end();
 		}
         
-        
+		void operator=(const bool x)
+		{
+			_type = ValueType::BOOL_TYPE;
+			_value.boolean = x;
+		}
+		
+		void operator=(const std::string& x)
+		{
+			_type = ValueType::STR_TYPE;
+			value = x;
+		}
+
 		void operator=(const int x)
 		{
-			value = std::to_string(x);
+			_type = ValueType::INT_TYPE;
+			_value.number_integer = x;
 		}
         
 		void operator=(const float x)
 		{
-			value = std::to_string(x);
+			_type = ValueType::FLOAT_TYPE;
+			_value.number_float = x;
 		}
         
 		Node& operator[](const int index) 
@@ -92,50 +207,110 @@ namespace Zaml
 		}
         
 		template <typename T>
-            T as() const
+            T& as() 
 		{
-			return T(value);
+			// TODO
+			// idk what to do in this case yet
+			static T dummy;
+			return dummy;
 		}
         
 		template <>
-            int as<int>() const
+            int& as<int>() 
 		{
-			return std::atoi(value.c_str());
+			static int dummy;
+			if(_type == ValueType::INT_TYPE)
+				return _value.number_integer;
+			//else
+				ZAML_THROW_INVALID_ACCESS;
+				return dummy;
 		}
         
 		template <>
-            std::string as<std::string>() const
+            std::string_view& as<std::string_view>()
 		{
-			return value;
+			static std::string_view dummy{"~"};
+			if(_type == ValueType::STR_TYPE)
+				return _value.string;
+			//else
+				ZAML_THROW_INVALID_ACCESS;
+				return dummy;
+		}
+
+		template <>
+            std::string& as<std::string>()
+		{
+			static std::string dummy{"~"};
+			if(_type == ValueType::STR_TYPE)
+				return value;
+			//else
+				ZAML_THROW_INVALID_ACCESS;
+				return dummy;
 		}
         
 		template <>
-            bool as<bool>() const
+            bool& as<bool>() 
 		{
-			if (value == "true") return true;
-			if (value == "false") return false;
-			if (value == "True") return true;
-			if (value == "False") return false;
-			if (value == "on") return true;
-			if (value == "off") return false;
-			if (value == "On") return true;
-			if (value == "Off") return false;
-			return false;
+			static bool dummy;
+			if(_type == ValueType::BOOL_TYPE)
+				return _value.boolean;
+			//else
+				ZAML_THROW_INVALID_ACCESS;
+				return dummy;
 		}
         
 		template <>
-            float as<float>() const
+            float& as<float>() 
 		{
-			return std::atof(value.c_str());
+			static float dummy;
+			if(_type == ValueType::FLOAT_TYPE)
+				return _value.number_float;
+			//else
+				ZAML_THROW_INVALID_ACCESS;
+				return dummy;
 		}
 	};
     
 #ifdef ZAML_IMPLEMENTATION
-	std::stringstream ParseNode(Node& root, int indent_level)
+	bool is_number(const std::string& s)
+	{
+		return !s.empty() && std::find_if(s.begin(), 
+			s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+	}
+	bool is_float(const std::string& str ) {
+		std::istringstream iss(str);
+		float f;
+		iss >> std::noskipws >> f; 
+		return iss.eof() && !iss.fail(); 
+	}
+	bool is_bool(const std::string& value){
+		if (value == "true") return true;
+		if (value == "false") return true;
+		if (value == "True") return true;
+		if (value == "False") return true;
+		if (value == "on") return true;
+		if (value == "off") return true;
+		if (value == "On") return true;
+		if (value == "Off") return true;
+		return false;
+	}
+	bool as_bool(const std::string& value){
+		if (value == "true") return true;
+		if (value == "false") return false;
+		if (value == "True") return true;
+		if (value == "False") return false;
+		if (value == "on") return true;
+		if (value == "off") return false;
+		if (value == "On") return true;
+		if (value == "Off") return false;
+		return false;
+	}
+
+	std::stringstream Dump(Node& root, int indent_level)
 	{
 		std::stringstream ss;
-		if (indent_level == 0)
-			ss << "---\n";
+		//if (indent_level == 0)
+		//	ss << "---\n";
         
 		for (auto& [name, child] : root)
 		{
@@ -147,11 +322,29 @@ namespace Zaml
                 ss << " ";
 #endif
 			}
-			ss << name << ": " << child.value << '\n';
+			switch (child._type)
+			{
+				case ValueType::STR_TYPE:
+					ss << name << ": " << child.value << '\n';
+					break;
+				case ValueType::BOOL_TYPE:
+					ss << name << ": " << (child._value.boolean ? "true" : "false") << '\n';
+					break;
+				case ValueType::INT_TYPE:
+					ss << name << ": " << child._value.number_integer << '\n';
+					break;
+				case ValueType::FLOAT_TYPE:
+					ss << name << ": " << child._value.number_float << '\n';
+					break;
+				default:
+					ss << name << ": ~\n";
+					break;
+			}
+			//ss << name << ": " << child._value << '\n';
 			
 			if (child.size() > 0)
 			{
-				ss << ParseNode(child, indent_level + 4).str();
+				ss << Dump(child, indent_level + 4).str();
 			}
 		}
         
@@ -160,7 +353,7 @@ namespace Zaml
     
 	void SaveFile(Node& root, const std::string& filename)
 	{
-		auto ss = ParseNode(root);
+		auto ss = Dump(root);
         
 		std::ofstream file(filename);
         
@@ -189,19 +382,24 @@ namespace Zaml
 		std::cout << "Zaml::Opening file: " << filename << std::endl;
 #endif
 		std::ifstream file(filename);
-		Node root = Node("root");
         
 		if (!file.is_open())
 		{
 			std::cerr << "Zaml::Failed to open file: " << filename << std::endl;
-			return root;
+			return Node{"root"};
 		}
         
 		std::stringstream ss;
 		ss << file.rdbuf();
 		std::string str = ss.str();
-        
-        
+		return Parse(str);
+	}
+	Node Parse(const std::string& data)
+	{
+		Node root = Node("root");
+		std::stringstream ss(data);
+		std::string str = ss.str();
+
 #if __EMSCRIPTEN__
 		static const std::regex r(R"rgx((\s*)(\w+|-)\s*:\s*(.*))rgx");
 #else
@@ -260,7 +458,35 @@ namespace Zaml
 				
 				
 				curr_node[key].key = key;
-				curr_node[key].value = m[3].str();
+
+				auto read_value = m[3].str();
+				if (is_float(read_value))
+				{
+					curr_node[key]._value.number_float = std::stof(read_value);
+					curr_node[key]._type = ValueType::FLOAT_TYPE;
+				}
+				else if (is_number(read_value))
+				{
+					curr_node[key]._value.number_integer = std::stoi(read_value);
+					curr_node[key]._type = ValueType::INT_TYPE;
+				}
+				else if (is_bool(read_value))
+				{
+					curr_node[key]._value.boolean = as_bool(read_value);
+					curr_node[key]._type = ValueType::BOOL_TYPE;
+				}
+				else if (key == "~")
+				{
+					curr_node[key]._value.string = "~";
+					curr_node[key]._type = ValueType::NONE_TYPE;
+				}
+				else 
+				{
+					curr_node[key].value = read_value;
+					curr_node[key]._value.string = std::string_view{curr_node[key].value};
+					curr_node[key]._type = ValueType::STR_TYPE;
+				}
+				//curr_node[key].value = m[3].str();
 				
 				last_key = std::string(key);
 				
@@ -268,7 +494,7 @@ namespace Zaml
 			}
 		}
 #if _DEBUG || __EMSCRIPTEN__
-		std::cout << "Zaml::Done parsing: " << ParseNode(root).str() << std::endl;
+		std::cout << "Zaml::Done parsing: " << std::endl << Dump(root).str() << std::endl;
 #endif
         
 		return root;
