@@ -50,6 +50,7 @@ tests: true
 
 int main()
 {
+	using namespace std::string_literals;
 	// load from a file
 	Zaml::Node config = Zaml::LoadFile(ASSETS_PATH + std::string("config.zaml"));
 
@@ -72,6 +73,9 @@ int main()
 		std::cerr << e.pretty_print() << std::endl;
 	}
 	test_node["test"]["bool"].as<bool>(); // valid
+	test_node["test"]["bool"] = "false"s;
+	test_node["test"]["bool"].as<std::string>(); // valid
+	test_node["test"]["bool"].as<bool>(); // invalid
 	
 
 	return 0;
