@@ -1,6 +1,7 @@
 #pragma once
 // Zaml.h - A simplefied Yaml parser
 // add #define ZAML_IMPLEMENTATION to a cpp file
+// add #define ZAML_EXCEPTIONS to add exceptions
 
 #include <string>
 #include <vector>
@@ -12,8 +13,48 @@
 #include <type_traits>
 #include <cassert>
 
+
+
 namespace Zaml
 {
+
+#ifdef ZAML_EXCEPTIONS
+	struct ZamlInvalidAccessException : public std::exception
+	{
+		const char* file;
+		int line;
+		const char* func;
+		const char* info;
+		ZamlInvalidAccessException(
+			const char* msg, 
+			const char* file_, 
+			int line_, 
+			const char* func_, 
+			const char* info_ = "") : std::exception(msg),
+        	file (file_),
+        	line (line_),
+        	func (func_),
+        	info (info_)
+        {
+        }
+
+		std::string pretty_print() const {
+			std::stringstream ss;
+			ss << what() << " - " << get_file() << ":" << get_line() << "::" << get_func() << std::endl;
+			return ss.str();
+		}
+	
+        const char* get_file() const { return file; }
+        int get_line() const { return line; }
+		const char* get_func() const { return func; }
+        const char* get_info() const { return info; }
+	};
+#define ZAML_THROW_INVALID_ACCESS throw ZamlInvalidAccessException("Zaml::Invalid Access", __FILE__, __LINE__, __func__);
+#else
+#define ZAML_THROW_INVALID_ACCESS  
+#endif
+
+
     struct Node;
 	std::stringstream Dump(Node& root, int indent_level = 0);
 	void SaveFile(Node& root, const std::string& filename);
@@ -180,7 +221,8 @@ namespace Zaml
 			static int dummy;
 			if(_type == ValueType::INT_TYPE)
 				return _value.number_integer;
-			else
+			//else
+				ZAML_THROW_INVALID_ACCESS;
 				return dummy;
 		}
         
@@ -190,7 +232,8 @@ namespace Zaml
 			static std::string_view dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return _value.string;
-			else
+			//else
+				ZAML_THROW_INVALID_ACCESS;
 				return dummy;
 		}
 
@@ -200,7 +243,8 @@ namespace Zaml
 			static std::string dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return value;
-			else
+			//else
+				ZAML_THROW_INVALID_ACCESS;
 				return dummy;
 		}
         
@@ -210,7 +254,8 @@ namespace Zaml
 			static bool dummy;
 			if(_type == ValueType::BOOL_TYPE)
 				return _value.boolean;
-			else
+			//else
+				ZAML_THROW_INVALID_ACCESS;
 				return dummy;
 		}
         
@@ -220,7 +265,8 @@ namespace Zaml
 			static float dummy;
 			if(_type == ValueType::FLOAT_TYPE)
 				return _value.number_float;
-			else
+			//else
+				ZAML_THROW_INVALID_ACCESS;
 				return dummy;
 		}
 	};
@@ -282,7 +328,7 @@ namespace Zaml
 					ss << name << ": " << child.value << '\n';
 					break;
 				case ValueType::BOOL_TYPE:
-					ss << name << ": " << child._value.boolean << '\n';
+					ss << name << ": " << (child._value.boolean ? "true" : "false") << '\n';
 					break;
 				case ValueType::INT_TYPE:
 					ss << name << ": " << child._value.number_integer << '\n';
@@ -448,7 +494,7 @@ namespace Zaml
 			}
 		}
 #if _DEBUG || __EMSCRIPTEN__
-		std::cout << "Zaml::Done parsing: " << Dump(root).str() << std::endl;
+		std::cout << "Zaml::Done parsing: " << std::endl << Dump(root).str() << std::endl;
 #endif
         
 		return root;
