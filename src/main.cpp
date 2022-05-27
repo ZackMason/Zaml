@@ -47,6 +47,7 @@ int main()
     
     display_text("\n\n");
 
+
     std::string test_data = 
         "test: ~\n"
         "  hello: world!\n";
@@ -58,8 +59,8 @@ int main()
     test_node["test"]["bool"]["cpp_style_f"] = false;
 
     try {
+        config["version"].as<float>();
 
-        test_node["test"]["bool"]["cpp_style_f"].as<std::string>();
     } 
     catch(Zaml::ZamlInvalidAccessException & e)
     {

@@ -211,6 +211,7 @@ namespace Zaml
 		{
 			// TODO
 			// idk what to do in this case yet
+			ZAML_THROW_INVALID_ACCESS;
 			static T dummy;
 			return dummy;
 		}
@@ -221,9 +222,8 @@ namespace Zaml
 			static int dummy;
 			if(_type == ValueType::INT_TYPE)
 				return _value.number_integer;
-			//else
-				ZAML_THROW_INVALID_ACCESS;
-				return dummy;
+			ZAML_THROW_INVALID_ACCESS;
+			return dummy;
 		}
         
 		template <>
@@ -232,9 +232,8 @@ namespace Zaml
 			static std::string_view dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return _value.string;
-			//else
-				ZAML_THROW_INVALID_ACCESS;
-				return dummy;
+			ZAML_THROW_INVALID_ACCESS;
+			return dummy;
 		}
 
 		template <>
@@ -243,9 +242,8 @@ namespace Zaml
 			static std::string dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return value;
-			//else
-				ZAML_THROW_INVALID_ACCESS;
-				return dummy;
+			ZAML_THROW_INVALID_ACCESS;
+			return dummy;
 		}
         
 		template <>
@@ -254,9 +252,8 @@ namespace Zaml
 			static bool dummy;
 			if(_type == ValueType::BOOL_TYPE)
 				return _value.boolean;
-			//else
-				ZAML_THROW_INVALID_ACCESS;
-				return dummy;
+			ZAML_THROW_INVALID_ACCESS;
+			return dummy;
 		}
         
 		template <>
@@ -265,9 +262,8 @@ namespace Zaml
 			static float dummy;
 			if(_type == ValueType::FLOAT_TYPE)
 				return _value.number_float;
-			//else
-				ZAML_THROW_INVALID_ACCESS;
-				return dummy;
+			ZAML_THROW_INVALID_ACCESS;
+			return dummy;
 		}
 	};
     
