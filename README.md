@@ -72,6 +72,7 @@ int main()
 	{
 		std::cerr << e.pretty_print() << std::endl;
 	}
+	// text such as "on" and "Off" is only valid as a bool when using Parse
 	test_node["test"]["bool"].as<bool>(); // valid
 	test_node["test"]["bool"] = "false"s;
 	test_node["test"]["bool"].as<std::string>(); // valid
