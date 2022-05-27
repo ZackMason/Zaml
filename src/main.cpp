@@ -58,15 +58,6 @@ int main()
     test_node["test"]["bool"]["cpp_style_t"] = true;
     test_node["test"]["bool"]["cpp_style_f"] = false;
 
-    try {
-        config["version"].as<float>();
-
-    } 
-    catch(Zaml::ZamlInvalidAccessException & e)
-    {
-        std::cerr << e.pretty_print() << std::endl;
-    }
-
 
     display_lines(Zaml::Dump(test_node).str());
     

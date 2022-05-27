@@ -17,8 +17,12 @@
 
 namespace Zaml
 {
-
 #ifdef ZAML_EXCEPTIONS
+#undef ZAML_EXCEPTIONS
+#define ZAML_EXCEPTIONS 1
+#endif
+
+#if ZAML_EXCEPTIONS && !__EMSCRIPTEN__
 	struct ZamlInvalidAccessException : public std::exception
 	{
 		const char* file;
@@ -51,6 +55,12 @@ namespace Zaml
 	};
 #define ZAML_THROW_INVALID_ACCESS throw ZamlInvalidAccessException("Zaml::Invalid Access", __FILE__, __LINE__, __func__);
 #else
+	struct ZamlInvalidAccessException : public std::exception
+	{
+		std::string pretty_print() const {
+			return "idk how you got here please report";
+		}
+	};
 #define ZAML_THROW_INVALID_ACCESS  
 #endif
 
@@ -403,14 +413,14 @@ namespace Zaml
 #endif
 		std::smatch m;
         
-		int indent_level = 0;
+		size_t indent_level = 0;
 		
 		std::vector<std::string> indent_keys; 
 		indent_keys.push_back(root.key);
         
 		std::string last_key = root.key;
 		
-		std::vector<int> last_indent; 
+		std::vector<size_t> last_indent; 
         
 		//std::cout << "Zaml::Executing regex on: " << str << std::endl;
         
