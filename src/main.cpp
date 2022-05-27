@@ -1,6 +1,6 @@
-#define ZAML_IMPLEMENTATION
-#define ZAML_EXCEPTIONS
-#include "Zaml.h"
+#define NYML_IMPLEMENTATION
+#define NYML_EXCEPTIONS
+#include "Nyml.h"
 
 #include "json.hpp"
 using nlohmann::json;
@@ -40,10 +40,10 @@ void display_lines(const std::string& text)
 int main()
 {
     using namespace std::string_literals;
-    Zaml::Node config = Zaml::LoadFile(ASSETS_PATH + std::string("config.yaml"));
+    nyml::Node config = nyml::LoadFile(ASSETS_PATH + std::string("config.yaml"));
     
     display_text(config["window"]["title"].as<std::string>());
-    display_lines(Zaml::Dump(config).str());
+    display_lines(nyml::Dump(config).str());
     
     display_text("\n\n");
 
@@ -52,14 +52,14 @@ int main()
         "test: ~\n"
         "  hello: world!\n";
 
-    Zaml::Node test_node = Zaml::Parse(test_data);
+    nyml::Node test_node = nyml::Parse(test_data);
     test_node["test"]["string"]["greeting"] = "How are you?"s;
     test_node["test"]["string"]["answer"] = "Good"s;
     test_node["test"]["bool"]["cpp_style_t"] = true;
     test_node["test"]["bool"]["cpp_style_f"] = false;
 
 
-    display_lines(Zaml::Dump(test_node).str());
+    display_lines(nyml::Dump(test_node).str());
     
     if (config["test"].as<bool>())
     {
@@ -74,11 +74,11 @@ int main()
                 
                 {
                     ScopeProfiler timer(config["test"][i]["title"].as<std::string>());
-                    auto test = Zaml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
+                    auto test = nyml::LoadFile(ASSETS_PATH + config["test"][i]["file"].as<std::string>());
                     
                     display_text(timer.end());
                     display_text("---");
-                    display_lines(Zaml::Dump(test).str());
+                    display_lines(nyml::Dump(test).str());
                     display_text("\n\n");
                 }
             }

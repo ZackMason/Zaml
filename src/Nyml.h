@@ -1,7 +1,7 @@
 #pragma once
-// Zaml.h - A simplefied Yaml parser
-// add #define ZAML_IMPLEMENTATION to a cpp file
-// add #define ZAML_EXCEPTIONS to add exceptions
+// Nyml.h - A simplefied Yaml parser
+// add #define NYML_IMPLEMENTATION to a cpp file
+// add #define NYML_EXCEPTIONS to add exceptions
 
 #include <string>
 #include <vector>
@@ -13,23 +13,21 @@
 #include <type_traits>
 #include <cassert>
 
-
-
-namespace Zaml
+namespace nyml
 {
-#ifdef ZAML_EXCEPTIONS
-#undef ZAML_EXCEPTIONS
-#define ZAML_EXCEPTIONS 1
+#ifdef NYML_EXCEPTIONS
+#undef NYML_EXCEPTIONS
+#define NYML_EXCEPTIONS 1
 #endif
 
-#if ZAML_EXCEPTIONS && !__EMSCRIPTEN__
-	struct ZamlInvalidAccessException : public std::exception
+#if NYML_EXCEPTIONS && !__EMSCRIPTEN__
+	struct NymlInvalidAccessException : public std::exception
 	{
 		const char* file;
 		int line;
 		const char* func;
 		const char* info;
-		ZamlInvalidAccessException(
+		NymlInvalidAccessException(
 			const char* msg, 
 			const char* file_, 
 			int line_, 
@@ -53,15 +51,15 @@ namespace Zaml
 		const char* get_func() const { return func; }
         const char* get_info() const { return info; }
 	};
-#define ZAML_THROW_INVALID_ACCESS throw ZamlInvalidAccessException("Zaml::Invalid Access", __FILE__, __LINE__, __func__);
+#define NYML_THROW_INVALID_ACCESS throw NymlInvalidAccessException("nyml::Invalid Access", __FILE__, __LINE__, __func__);
 #else
-	struct ZamlInvalidAccessException : public std::exception
+	struct NymlInvalidAccessException : public std::exception
 	{
 		std::string pretty_print() const {
 			return "idk how you got here please report";
 		}
 	};
-#define ZAML_THROW_INVALID_ACCESS  
+#define NYML_THROW_INVALID_ACCESS  
 #endif
 
 
@@ -221,7 +219,7 @@ namespace Zaml
 		{
 			// TODO
 			// idk what to do in this case yet
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			static T dummy;
 			return dummy;
 		}
@@ -232,7 +230,7 @@ namespace Zaml
 			static int dummy;
 			if(_type == ValueType::INT_TYPE)
 				return _value.number_integer;
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			return dummy;
 		}
         
@@ -242,7 +240,7 @@ namespace Zaml
 			static std::string_view dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return _value.string;
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			return dummy;
 		}
 
@@ -252,7 +250,7 @@ namespace Zaml
 			static std::string dummy{"~"};
 			if(_type == ValueType::STR_TYPE)
 				return value;
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			return dummy;
 		}
         
@@ -262,7 +260,7 @@ namespace Zaml
 			static bool dummy;
 			if(_type == ValueType::BOOL_TYPE)
 				return _value.boolean;
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			return dummy;
 		}
         
@@ -272,12 +270,12 @@ namespace Zaml
 			static float dummy;
 			if(_type == ValueType::FLOAT_TYPE)
 				return _value.number_float;
-			ZAML_THROW_INVALID_ACCESS;
+			NYML_THROW_INVALID_ACCESS;
 			return dummy;
 		}
 	};
     
-#ifdef ZAML_IMPLEMENTATION
+#ifdef NYML_IMPLEMENTATION
 	bool is_number(const std::string& s)
 	{
 		return !s.empty() && std::find_if(s.begin(), 
@@ -366,7 +364,7 @@ namespace Zaml
 		file << ss.str();
         
 #if _DEBUG
-		std::cout << "Zaml::Write file: " << filename << " ->:\n" << ss.str() << std::endl;
+		std::cout << "nyml::Write file: " << filename << " ->:\n" << ss.str() << std::endl;
 #endif
 	}
     
@@ -385,13 +383,13 @@ namespace Zaml
 	Node LoadFile(const std::string& filename)
 	{
 #if _DEBUG || __EMSCRIPTEN__
-		std::cout << "Zaml::Opening file: " << filename << std::endl;
+		std::cout << "nyml::Opening file: " << filename << std::endl;
 #endif
 		std::ifstream file(filename);
         
 		if (!file.is_open())
 		{
-			std::cerr << "Zaml::Failed to open file: " << filename << std::endl;
+			std::cerr << "nyml::Failed to open file: " << filename << std::endl;
 			return Node{"root"};
 		}
         
@@ -422,7 +420,7 @@ namespace Zaml
 		
 		std::vector<size_t> last_indent; 
         
-		//std::cout << "Zaml::Executing regex on: " << str << std::endl;
+		//std::cout << "nyml::Executing regex on: " << str << std::endl;
         
         while(xplat_getline(ss, str))
         {
@@ -500,7 +498,7 @@ namespace Zaml
 			}
 		}
 #if _DEBUG || __EMSCRIPTEN__
-		std::cout << "Zaml::Done parsing: " << std::endl << Dump(root).str() << std::endl;
+		std::cout << "nyml::Done parsing: " << std::endl << Dump(root).str() << std::endl;
 #endif
         
 		return root;
