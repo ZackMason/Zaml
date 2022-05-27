@@ -10,7 +10,6 @@
 #include <sstream>
 #include <iostream>
 #include <type_traits>
-#include <variant>
 #include <cassert>
 
 namespace Zaml
@@ -77,8 +76,6 @@ namespace Zaml
 		ValueType _type;
 		Value _value;
 
-		//std::variant<bool, int, float, std::string> _value;
-
 		std::string value;
         
 		std::unordered_map<std::string, Node> children;
@@ -129,15 +126,28 @@ namespace Zaml
 			return children.end();
 		}
         
-        
+		void operator=(const bool x)
+		{
+			_type = ValueType::BOOL_TYPE;
+			_value.boolean = x;
+		}
+		
+		void operator=(const std::string& x)
+		{
+			_type = ValueType::STR_TYPE;
+			value = x;
+		}
+
 		void operator=(const int x)
 		{
-			value = std::to_string(x);
+			_type = ValueType::INT_TYPE;
+			_value.number_integer = x;
 		}
         
 		void operator=(const float x)
 		{
-			value = std::to_string(x);
+			_type = ValueType::FLOAT_TYPE;
+			_value.number_float = x;
 		}
         
 		Node& operator[](const int index) 
