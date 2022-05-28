@@ -35,10 +35,10 @@ settings: ~
 tests: true
 	-: on
 		title: test1
-		file: test1.zaml
+		file: test1.nyml
 	-: off
 		title: bench_test
-		file: bench_test.zaml
+		file: bench_test.nyml
   ```
 
 ## Code Example
