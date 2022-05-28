@@ -52,7 +52,7 @@ int main()
 {
 	using namespace std::string_literals;
 	// load from a file
-	nyml::Node config = nyml::LoadFile(ASSETS_PATH + std::string("config.zaml"));
+	nyml::Node config = nyml::LoadFile(ASSETS_PATH + std::string("config.nyml"));
 
 	std::cout << nyml::Dump(config).str() << std::endl;
 
