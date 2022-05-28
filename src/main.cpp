@@ -40,7 +40,7 @@ void display_lines(const std::string& text)
 int main()
 {
     using namespace std::string_literals;
-    nyml::Node config = nyml::LoadFile(ASSETS_PATH + std::string("config.yaml"));
+    nyml::Node config = nyml::LoadFile(ASSETS_PATH + std::string("config.nyml"));
     
     display_text(config["window"]["title"].as<std::string>());
     display_lines(nyml::Dump(config).str());

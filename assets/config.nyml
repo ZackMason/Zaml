@@ -1,9 +1,9 @@
 ---
-version: 0.1.1
+version: 0.2.1
 window: ~
 	width: 640
 	height: 480
-	title: Zaml is great
+	title: Nyml is great
 	batching: 0
 	font: ~
 		file: Fonts/NotoMono-Regular.ttf
@@ -25,8 +25,8 @@ settings: ~
 test: true
 	-: false
 		title: Ninja Test
-		file: ninjato.zaml
+		file: ninjato.nyml
 	-: false
 		title: Tiled Level Test
-		file: level0.zaml
+		file: level0.nyml
 
